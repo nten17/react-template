@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import PlaidLink from "react-plaid-link";
@@ -7,6 +8,7 @@ import usePlaid from "../hooks/UsePlaid";
 import DataTable from "../components/DataTable";
 import Button from "@material-ui/core/Button";
 import ApiService from "../services/ApiService";
+import ActionButton from "../components/ActionButton/ActionButton";
 
 // @ts-ignore
 const useStyles = makeStyles(theme => ({
@@ -39,15 +41,17 @@ const useStyles = makeStyles(theme => ({
 function Dashboard(props: any) {
   const classes: any = useStyles(props);
   const apiService: any = new ApiService();
-  const [
-    { storedAccessToken, transactions, handleSuccess, handleExit }
-  ]: any = usePlaid();
+  // @ts-ignore
+  const [{ transactions, handleSuccess, handleExit }]: any = usePlaid();
+
+  // @ts-ignore
+  const [isLoading, setIsLoading]: any = useState(false);
 
   // remove our accessToken
   async function handleSignout() {
     return apiService.ClearSession();
   }
-
+  // @ts-ignore
   const Link = () => {
     return (
       <div className={classes.linkView}>
@@ -67,6 +71,14 @@ function Dashboard(props: any) {
     );
   };
 
+  const handleClick = () => {
+    setIsLoading(!isLoading);
+  };
+
+  const LoadingText = () => {
+    return <Typography variant="h3">Loading...</Typography>;
+  };
+
   const Transactions = () => {
     return (
       <div className={classes.transactionView}>
@@ -75,6 +87,10 @@ function Dashboard(props: any) {
           Last 30 days, by spending category (descending)
         </Typography>
         <div>
+          <ActionButton
+            onClick={() => handleClick()}
+            title={isLoading ? "Loading off" : "Loading on"}
+          />
           <Button
             onClick={() => handleSignout()}
             variant="contained"
@@ -83,7 +99,11 @@ function Dashboard(props: any) {
             Sign out
           </Button>
         </div>
-        <DataTable transactions={transactions} />
+        {isLoading ? (
+          <LoadingText />
+        ) : (
+          <DataTable transactions={transactions} />
+        )}
       </div>
     );
   };
@@ -92,7 +112,8 @@ function Dashboard(props: any) {
     // If we have an accessToken, display our transactions table
     // Otherwise, prompt the user to login with Plaid
     <div className={classes.root}>
-      {storedAccessToken ? <Transactions /> : <Link />}
+      <Transactions />
+      {/* {storedAccessToken ? <Transactions /> : <Link />} */}
     </div>
   );
 }
